@@ -1,0 +1,22 @@
+PS C:\Users\Alp\Documents\GitHub\Web_Final_Hospital_E> curl http://localhost:8081/status
+
+
+StatusCode        : 200
+StatusDescription : OK
+Content           : {"current_stock":99,"daily_consumption":68,"days_of_supply":1.46,"hospital_id":"Hospital-E","last_updated":"2026-01-09T19:52:08.610582+00:00","product_code":"PHYSIO-SALINE-500ML","status":"low","thres. 
+                    ..
+RawContent        : HTTP/1.1 200 OK
+                    Connection: close
+                    Content-Length: 211
+                    Content-Type: application/json
+                    Date: Fri, 09 Jan 2026 19:52:51 GMT
+                    Server: Werkzeug/3.0.1 Python/3.9.25
+
+                    {"current_stock":99,"daily_consump...
+Forms             : {}
+Headers           : {[Connection, close], [Content-Length, 211], [Content-Type, application/json], [Date, Fri, 09 Jan 2026 19:52:51 GMT]...}
+Images            : {}
+InputFields       : {}
+Links             : {}
+ParsedHtml        : mshtml.HTMLDocumentClass
+RawContentLength  : 211

@@ -1,0 +1,147 @@
+>> curl "http://team1-central-platform-eqajhdbjbggkfxhf.westeurope-01.azurewebsites.net/CentralServices?wsdl"
+
+
+StatusCode        : 200
+StatusDescription : OK
+Content           : <?xml version='1.0' encoding='UTF-8'?>
+                    <wsdl:definitions xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:plink="http://schemas.xmlsoap.org/ws/20...
+RawContent        : HTTP/1.1 200 OK
+                    Content-Length: 6734
+                    Content-Type: text/xml; charset=utf-8
+                    Date: Fri, 09 Jan 2026 19:54:41 GMT
+
+                    <?xml version='1.0' encoding='UTF-8'?>
+                    <wsdl:...
+Forms             : {}
+Headers           : {[Content-Length, 6734], [Content-Type, text/xml; charset=utf-8], [Date, Fri, 09 Jan 2026 19:54:41 GMT], [Server, Werkzeug/2.3.7 Python/3.9.25]}
+Images            : {}
+InputFields       : {@{innerHTML=; innerText=; outerHTML=<?xml:namespace prefix = "wsdl" /><wsdl:input name="StockUpdate" message="tns:StockUpdate"></wsdl:input>; outerText=; tagName=input}, @{innerHTML=; innerText=; oute 
+                    rHTML=<?xml:namespace prefix = "wsdl" /><wsdl:input name="CreateOrder" message="tns:CreateOrder"></wsdl:input>; outerText=; tagName=input}, @{innerHTML=<?xml:namespace prefix = "wsdlsoap11" /><wsdlsoap 
+                    11:body use="literal"></wsdlsoap11:body>; innerText=; outerHTML=<?xml:namespace prefix = "wsdl" /><wsdl:input name="StockUpdate"><?xml:namespace prefix = "wsdlsoap11" /><wsdlsoap11:body use="literal">< 
+                    /wsdlsoap11:body></wsdl:input>; outerText=; tagName=input}, @{innerHTML=<?xml:namespace prefix = "wsdlsoap11" /><wsdlsoap11:body use="literal"></wsdlsoap11:body>; innerText=; outerHTML=<?xml:namespace  
+                    prefix = "wsdl" /><wsdl:input name="CreateOrder"><?xml:namespace prefix = "wsdlsoap11" /><wsdlsoap11:body use="literal"></wsdlsoap11:body></wsdl:input>; outerText=; tagName=input}}
+Links             : {}
+ParsedHtml        : mshtml.HTMLDocumentClass
+RawContentLength  : 6734
+
+
+
+PS C:\Users\Alp\Documents\GitHub\Web_Final_Hospital_E> docker exec -it hospital_e_stock_ms /bin/bash
+root@4dff2d345227:/app# # Python SOAP client test
+root@4dff2d345227:/app# python3 -c "
+> from services.stock_ms.soap_client import soap_client
+> result = soap_client.test_connection()
+> print('SOAP Connection Test:', result)
+> "
+
+SOAP Connection Test: True
+
+
+root@d4e54bc0bcd3:/app# python3 -c "
+> from services.stock_ms.soap_client import soap_client
+> result = soap_client.test_connection()
+> print('SOAP Connection Test:', result)
+> "
+
+SOAP Connection Test: True
+root@d4e54bc0bcd3:/app# 
+
+PS C:\Users\Alp\Documents\GitHub\Web_Final_Hospital_E> docker exec -it hospital_e_db psql -U postgres -d hospital_e_db
+psql (15.15)
+Type "help" for help.
+
+hospital_e_db=# UPDATE stock SET 
+hospital_e_db-#     current_stock_units = 136,
+hospital_e_db-#     daily_consumption_units = 68,
+hospital_e_db-#     days_of_supply = 2.0
+hospital_e_db-# WHERE product_code = 'PHYSIO-SALINE-500ML';
+UPDATE 1
+hospital_e_db=#
+hospital_e_db=# SELECT * FROM stock;
+ stock_id | hospital_id |    product_code     | current_stock_units | daily_consumption_units | days_of_supply | reorder_threshold | max_stock_level |         last_updated          |          created_at
+----------+-------------+---------------------+---------------------+-------------------------+----------------+-------------------+-----------------+-------------------------------+-------------------------------
+        1 | Hospital-E  | PHYSIO-SALINE-500ML |                 136 |                      68 |           2.00 |              2.00 |             680 | 2026-01-09 20:01:20.752308+00 | 2026-01-09 19:07:11.413872+00
+(1 row)
+
+PS C:\Users\Alp\Documents\GitHub\Web_Final_Hospital_E> Invoke-RestMethod -Uri http://localhost:8081/trigger -Method Post
+
+
+alert_type           : CRITICAL_STOCK
+communication_result : @{event_hub_success=True; soap_response=; soap_success=False}
+consumption          : 58
+current_stock        : 6
+days_of_supply       : 0,09
+previous_stock       : 64
+severity             : URGENT
+threshold_breached   : True
+
+PS C:\Users\Alp\Documents\GitHub\Web_Final_Hospital_E> curl http://localhost:8081/alerts
+>>
+
+
+StatusCode        : 200
+StatusDescription : OK
+Content           : {"alerts":[{"acknowledged":false,"acknowledged_at":null,"alert_id":54,"alert_type":"CRITICAL_STOCK","created_at":"Fri, 09 Jan 2026 20:02:31 GMT","current_stock":6,"daily_consumption":68,"days_of_suppl. 
+                    ..
+RawContent        : HTTP/1.1 200 OK
+                    Connection: close
+                    Content-Length: 15299
+                    Content-Type: application/json
+                    Date: Fri, 09 Jan 2026 20:02:57 GMT
+                    Server: Werkzeug/3.0.1 Python/3.9.25
+
+                    {"alerts":[{"acknowledged":false...
+Forms             : {}
+Headers           : {[Connection, close], [Content-Length, 15299], [Content-Type, application/json], [Date, Fri, 09 Jan 2026 20:02:57 GMT]...}
+Images            : {}
+InputFields       : {}
+Links             : {}
+ParsedHtml        : mshtml.HTMLDocumentClass
+RawContentLength  : 15299
+
+PS C:\Users\Alp\Documents\GitHub\Web_Final_Hospital_E> curl http://localhost:8081/logs
+
+
+StatusCode        : 200
+StatusDescription : OK
+Content           : {"count":50,"logs":[{"architecture":"SOA","direction":"OUTGOING","error_message":"You must issue a POST request with the Content-Type header properly set.","event_type":"STOCK_UPDATE_SENT","latency_ms. 
+                    ..
+RawContent        : HTTP/1.1 200 OK
+                    Connection: close
+                    Content-Length: 24249
+                    Content-Type: application/json
+                    Date: Fri, 09 Jan 2026 20:03:07 GMT
+                    Server: Werkzeug/3.0.1 Python/3.9.25
+
+                    {"count":50,"logs":[{"architectu...
+Forms             : {}
+Headers           : {[Connection, close], [Content-Length, 24249], [Content-Type, application/json], [Date, Fri, 09 Jan 2026 20:03:07 GMT]...}
+Images            : {}
+InputFields       : {}
+Links             : {}
+ParsedHtml        : mshtml.HTMLDocumentClass
+RawContentLength  : 24249
+
+PS C:\Users\Alp\Documents\GitHub\Web_Final_Hospital_E> curl http://localhost:8082/orders
+
+
+StatusCode        : 200
+StatusDescription : OK
+Content           : {"count":0,"orders":[]}
+
+RawContent        : HTTP/1.1 200 OK
+                    Connection: close
+                    Content-Length: 24
+                    Content-Type: application/json
+                    Date: Fri, 09 Jan 2026 20:03:18 GMT
+                    Server: Werkzeug/3.0.1 Python/3.9.25
+
+                    {"count":0,"orders":[]}
+
+Forms             : {}
+Headers           : {[Connection, close], [Content-Length, 24], [Content-Type, application/json], [Date, Fri, 09 Jan 2026 20:03:18 GMT]...}
+Images            : {}
+InputFields       : {}
+Links             : {}
+ParsedHtml        : mshtml.HTMLDocumentClass
+RawContentLength  : 24
