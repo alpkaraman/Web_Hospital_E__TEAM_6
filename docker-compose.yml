@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  database:
+    image: postgres:15-alpine
+    container_name: hospital_e_db
+    environment:
+      POSTGRES_DB: hospital_e_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./database/init_data.sql:/docker-entrypoint-initdb.d/02-init_data.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hospital_network
+
+  # StockMS - Stock Monitoring Service
+  stock-ms:
+    build:
+      context: .
+      dockerfile: Dockerfile.stockms
+    container_name: hospital_e_stock_ms
+    environment:
+      # Database
+      - DB_HOST=database
+      - DB_PORT=5432
+      - DB_NAME=hospital_e_db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      
+      # SOAP Configuration (Team 1)
+      - SOAP_WSDL_URL=http://team1-central-platform-eqajhdbjbggkfxhf.westeurope-01.azurewebsites.net/CentralServices?wsdl
+      - SOAP_ENDPOINT=http://team1-central-platform-eqajhdbjbggkfxhf.westeurope-01.azurewebsites.net/CentralServices
+      
+      # Azure Event Hub
+      - EVENT_HUB_CONNECTION_STRING=Endpoint=sb://medical-supply-chain-ns.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=HFDW05QKieWgy3uDKmNHc2OisPdrfNvoy+AEhKCJZlw=
+      - EVENT_HUB_INVENTORY_TOPIC=inventory-low-events
+      
+      # Service Configuration
+      - STOCK_MS_HOST=0.0.0.0
+      - STOCK_MS_PORT=8081
+      - STOCK_CHECK_INTERVAL=60
+      
+      # Logging
+      - LOG_LEVEL=INFO
+    ports:
+      - "8081:8081"
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - hospital_network
+    restart: unless-stopped
+
+  # OrderMS - Order Management Service
+  order-ms:
+    build:
+      context: .
+      dockerfile: Dockerfile.orderms
+    container_name: hospital_e_order_ms
+    environment:
+      # Database
+      - DB_HOST=database
+      - DB_PORT=5432
+      - DB_NAME=hospital_e_db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      
+      # Azure Event Hub
+      - EVENT_HUB_CONNECTION_STRING=Endpoint=sb://medical-supply-chain-ns.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=HFDW05QKieWgy3uDKmNHc2OisPdrfNvoy+AEhKCJZlw=
+      - EVENT_HUB_ORDER_TOPIC=order-commands
+      - EVENT_HUB_CONSUMER_GROUP=hospital-e-consumer
+      
+      # Service Configuration
+      - ORDER_MS_HOST=0.0.0.0
+      - ORDER_MS_PORT=8082
+      
+      # Logging
+      - LOG_LEVEL=INFO
+    ports:
+      - "8082:8082"
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - hospital_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  hospital_network:
+    driver: bridge
